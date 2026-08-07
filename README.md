@@ -1,2 +1,2 @@
 # Desarrollo-Web-y-Movil
-Tarea Máximo Pérez Feliú, Rut 22.104.757-5, NRC: 8479
+Tarea Máximo Pérez Feliú | NRC: 8479
