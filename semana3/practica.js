@@ -103,7 +103,7 @@ function calcularTotal() {
     let total = 0;
     Object.values(carrito).forEach(juego => {
         total += (juego.precio * juego.cantidad);
-        total.toFixed(2);
+        total = Math.floor(total * 100) / 100;
     });
 
     document.getElementById("lblTotal").innerText = total;
