@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+// run, nombre completo, direccion, comuna, provincia, region, fecha de nacimeinto, sexo, correo electronico, telefono, correovalidado, perfil
+
 const usuarioSchema = mongoose.Schema({
     run: String,
     nombreCompleto: String,
