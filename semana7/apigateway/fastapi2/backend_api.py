@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+
 app = FastAPI(
     title = "Backend API en",
     description = "API ubicada y enrutada por API gateway"
@@ -12,19 +13,19 @@ def health():
         "service": "Backend API"
     }
 
-@app.get("/productos")
+@app.get("/products")
 def products():
     return {
-        "productos": [
-            {"id": 1, "nombre": "Notebook", "precio": 900000},
-            {"id": 2, "nombre": "Monitor", "precio": 250000},
+        "products": [
+            {"id": 1, "name": "Notebook", "price": 900000},
+            {"id": 2, "name": "Monitor", "price": 250000},
         ]
     }
 
-@app.get("/ordenes")
+@app.get("/orders")
 def orders():
     return {
-        "ordenes": [
+        "orders": [
             {"id": 1001, "status": "paid"},
             {"id": 1002, "status": "pending"},
         ]
