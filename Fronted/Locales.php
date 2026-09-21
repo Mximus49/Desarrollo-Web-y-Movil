@@ -1,23 +1,105 @@
 <!DOCTYPE html>
 <html lang="es">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quesería Andina — Locales</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="index.css" rel="stylesheet">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Queso Y Sabor - Locales</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="index.css" rel="stylesheet">
+</head>
 <body>
 
 <header class="topbar">
-  <div class="logo">Quesería Andina <span>desde 1978</span></div>
+  <div class="logo">Queso Y Sabor <span>desde 1978</span></div>
   <div class="search">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input type="text" placeholder="Buscar quesos, quesillos, tablas…">
   </div>
-  <a href="#" class="account">
-    <span>Ingresar</span>
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-  </a>
+  <div class="d-flex align-items-center gap-2">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">
+      Iniciar sesión
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#RegisterModal">
+      Registrarse
+  </div>
 </header>
+
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="loginModalLabel">Iniciar Sesión</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <form action="#" method="POST">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="login-email" class="form-label">Correo electrónico</label>
+              <input type="email" class="form-control" id="login-email" placeholder="nombre@ejemplo.cl" required>
+            </div>
+            <div class="mb-3">
+              <label for="login-password" class="form-label">Contraseña</label>
+              <input type="password" class="form-control" id="login-password" placeholder="Tu contraseña" required>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="recordarme">
+                <label class="form-check-label small" for="recordarme">Recordarme</label>
+              </div>
+              <a href="#" class="small text-decoration-none">¿Olvidaste tu contraseña?</a>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Ingresar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="RegisterModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="loginModalLabel">Resgitro</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <form action="#" method="POST">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="login-email" class="form-label">Correo electrónico</label>
+              <input type="email" class="form-control" id="login-email" placeholder="nombre@ejemplo.cl" required>
+            </div>
+            <div class="mb-3">
+              <label for="Name" class="form-label">Nombre</label>
+              <input type="email" class="form-control" id="login-email" placeholder="nombre@ejemplo.cl" required>
+            </div>
+            <div class="mb-3">
+              <label for="Create-Password" class="form-label">Contraseña</label>
+              <input type="password" class="form-control" id="login-password" placeholder="Tu contraseña" required>
+            </div>
+            <div class="mb-3">
+              <label for="Create-Password" class="form-label">Repita la contraseña</label>
+              <input type="password" class="form-control" id="login-password" placeholder="Tu contraseña" required>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="recordarme">
+                <label class="form-check-label small" for="recordarme">Recordarme</label>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Registrarse</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
 
 <nav class="mainnav">
   <ul>
@@ -27,42 +109,63 @@
     <li class="active"><a href="Locales.php">Locales</a></li>
     <li><a href="Contacto.php">Contacto</a></li>
     <li class="nav-right">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-      <span>Carrito</span>
-      <span class="cart-count"></span>
+      <a href="Carrito.php">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span>Carrito</span>
+        <span class="cart-count"></span>
+      </a>
     </li>
   </ul>
 </nav>
 
-<main class="container my-5">
+<div class="locales-layout">
+  <div>
+    <h1 style="margin-bottom:22px;">Nuestros locales</h1>
 
-</main>
-    <div class="mb-5">
-    <h2 class="fw-bold fs-4 mb-2">Local 1</h2>
-    <p class="mb-1 text-secondary">Dirección: Av. Los Conquistadores 1234, Providencia</p>
-    <p class="mb-0 text-secondary">Número de Teléfono: +56 9 1234 5678</p>
-
-    <h2 class="fw-bold fs-4 mb-2">Local 2</h2>
-    <p class="mb-1 text-secondary">Dirección: Av. Los Conquistadores 1234, Providencia</p>
-    <p class="mb-0 text-secondary">Número de Teléfono: +56 9 1234 5678</p>
-    
-    <h2 class="fw-bold fs-4 mb-2">Local 3</h2>
-    <p class="mb-1 text-secondary">Dirección: Av. Los Conquistadores 1234, Providencia</p>
-    <p class="mb-0 text-secondary">Número de Teléfono: +56 9 1234 5678</p>
-
-    <img src="https://www.shutterstock.com/image-vector/map-pin-pointers-icon-navigation-260nw-2306661709.jpg" class="img-fluid" alt="...">
+    <div class="locale-card">
+      <h4>Local Providencia</h4>
+      <div class="meta">
+        Av. Los Conquistadores 1234, Providencia<br>
+        +56 9 1234 5678<br>
+        Lun a sáb, 9:00 a 20:00
+      </div>
     </div>
+
+    <div class="locale-card">
+      <h4>Local Ñuñoa</h4>
+      <div class="meta">
+        Av. Irarrázaval 3200, Ñuñoa<br>
+        +56 9 2345 6789<br>
+        Lun a sáb, 9:30 a 19:30
+      </div>
+    </div>
+
+    <div class="locale-card">
+      <h4>Local Las Condes</h4>
+      <div class="meta">
+        Av. Apoquindo 4500, Las Condes<br>
+        +56 9 3456 7890<br>
+        Lun a sáb, 10:00 a 21:00
+      </div>
+    </div>
+  </div>
+
+  <div id="map">
+    <img src="https://cerrajeriaadomicilio.cl/wp-content/uploads/2025/06/mapa-comuna-providencia.webp" alt="Mapa de la comuna de Providencia con la ubicación de nuestros locales">
+  </div>
+</div>
+
 <footer>
   <div>
-    <h3>Quesería Andina</h3>
+    <h3>Queso Y Sabor</h3>
     <p class="desc">Afinamos y distribuimos quesos artesanales del sur de Chile desde 1978, directo de la cava a tu mesa.</p>
   </div>
   <div>
     <h3>Contacto</h3>
     <ul>
-      <li><a href="#">contacto@queseriaandina.cl</a></li>
-      <li><a href="#">+56 9 1234 5678</a></li>
-      <li><a href="#">Nuestros locales</a></li>
+      <li><a href="Contacto.php">contacto@quesoysabor.cl</a></li>
+      <li><a href="Contacto.php">+56 9 1234 5678</a></li>
+      <li><a href="Locales.php">Nuestros locales</a></li>
     </ul>
   </div>
   <div>
@@ -73,8 +176,10 @@
       <li><a href="#">Trabaja con nosotros</a></li>
     </ul>
   </div>
-  <div class="foot-bottom">© 2026 Quesería Andina. Todos los derechos reservados.</div>
+  <div class="foot-bottom">© 2026 Queso Y Sabor. Todos los derechos reservados.</div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
