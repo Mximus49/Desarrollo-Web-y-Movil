@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quesería Andina - Contacto</title>
+  <title>Quesería Andina - Carrito</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link href="index.css" rel="stylesheet">
@@ -28,8 +28,8 @@
     <li><a href="catalogo.php">Catálogo</a></li>
     <li><a href="Ofertas.php">Ofertas</a></li>
     <li><a href="Locales.php">Locales</a></li>
-    <li class="active"><a href="Contacto.php">Contacto</a></li>
-    <li class="nav-right">
+    <li><a href="Contacto.php">Contacto</a></li>
+    <li class="nav-right active">
       <a href="Carrito.php">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
         <span>Carrito</span>
@@ -39,26 +39,31 @@
   </ul>
 </nav>
 
-<div class="contact-layout">
-  <div class="contact-info">
-    <h1>Contáctanos</h1>
-    <p>Dirección: Av. Los Conquistadores 1234, Providencia</p>
-    <p>Teléfono: +56 9 1234 5678</p>
+<div class="cart-layout">
+  <div>
+    <h1 style="margin-bottom:22px;">Tu carrito</h1>
+    <div id="cart-list"></div>
+    <div class="cart-empty" id="cart-empty">
+      Tu carrito está vacío. <a href="catalogo.php">Ver el catálogo</a> o <a href="Ofertas.php">revisar las ofertas</a>.
+    </div>
   </div>
 
-  <div>
-    <h2>Mándanos un mensaje</h2>
-    <form id="contact-form" class="contact-form">
-      <div class="form-grid">
-        <input type="email" placeholder="Email" required>
-        <input type="text" placeholder="Nombre" required>
-        <input type="tel" placeholder="Teléfono">
-      </div>
-      <textarea placeholder="Mensaje" required></textarea>
-      <button type="submit" class="btn-primary">Enviar mensaje</button>
-      <p class="form-note" id="form-note"></p>
-    </form>
-  </div>
+  <aside class="cart-summary">
+    <h3>Resumen del pedido</h3>
+    <div class="summary-row">
+      <span>Subtotal</span>
+      <span id="cart-subtotal">$0</span>
+    </div>
+    <div class="summary-row">
+      <span>Envío</span>
+      <span>Se calcula al pagar</span>
+    </div>
+    <div class="summary-row total">
+      <span>Total</span>
+      <span id="cart-total">$0</span>
+    </div>
+    <button class="btn-primary btn-pay" id="btn-pay" type="button" disabled>Pagar</button>
+  </aside>
 </div>
 
 <footer>
