@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -529,6 +528,4 @@
 
 <script src="app.js"></script>
 </body>
->>>>>>> 2554589826e83983d057f4319b911ae51ae57833
->>>>>>> 7d8877a20574ac0133592c173dc3c414d3ca0906
 </html>
