@@ -559,6 +559,7 @@
     border-radius: 8px;
     padding: 18px 20px;
     margin-bottom: 16px;
+    cursor: pointer;
     transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
   }
   .locale-card:hover{ transform: translateX(4px); }
@@ -572,10 +573,8 @@
     width: 100%; height: 480px;
     border-radius: 10px;
     border: 1px solid var(--line);
-    overflow: hidden;
-    line-height: 0;
+    background: var(--cream-card);
   }
-  #map img{ width: 100%; height: 100%; object-fit: cover; display: block; }
 
   /* ---------- Contacto ---------- */
   .contact-layout{
