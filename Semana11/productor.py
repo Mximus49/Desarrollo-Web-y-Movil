@@ -6,11 +6,13 @@
 # python productor.py --formato xml --id 123 --cliente "Ernesto Vivanco" --monto 123.45
 # JSON
 # python productor.py --formato json --id 123 --cliente "Ernesto Vivanco" --monto 123.45
+
 import stomp
 import argparse
 import json
 from decimal import Decimal, InvalidOperation
 import xml.etree.ElementTree as ET
+
 
 DESTINO = "/queue/pedidos"
 
