@@ -6,7 +6,6 @@ import json
 import os
 import secrets
 
-
 import httpx
 from bson import ObjectId
 from fastapi import FastAPI, HTTPException, Header, Depends, Request
