@@ -1,0 +1,27 @@
+Prueba de fallos, desconexiones y concurrencia (2026-11-07 17:38)
+
+1. inventory detenido
+  [OK] POST /api/orders -> 503 Servicio interno no disponible, intente mas tarde
+  [OK] GraphQL responde parcial: el pedido sale y producto queda null con un error
+  [OK] GET /api/products -> 502 Servicio inventory no disponible
+  [OK] health marca inventory: SIN RESPUESTA
+  [OK] inventory reiniciado: GraphQL vuelve a responder completo
+
+2. broker STOMP (RabbitMQ) detenido
+  [OK] La anulacion funciona sin broker -> 200
+  [OK] El aviso queda guardado en avisos_pendientes (1)
+  [OK] Broker de vuelta: orders reenvia el aviso, notifications se reconecta y envia el correo
+  [OK] avisos_pendientes queda vacio
+
+3. mensajeria detenida
+  [OK] Registro sin poder validar el correo -> 503 No se pudo validar el correo, intente mas tarde
+
+4. auth detenido
+  [OK] Ruta protegida -> 502 Error consultando Authentication Service
+  [OK] Catalogo publico sigue disponible -> 200
+  [OK] auth reiniciado: la sesion sigue valida (vive en MongoDB)
+
+5. Compras simultaneas sobre poco stock
+  [OK] 10 compras simultaneas con stock 2: 2 creadas, 8 sin stock, stock final 0
+
+Resultado: 14 de 14 comprobaciones OK

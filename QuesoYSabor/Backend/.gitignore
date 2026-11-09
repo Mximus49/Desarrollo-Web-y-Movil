@@ -1,0 +1,5 @@
+graphql/node_modules/
+__pycache__/
+*.pyc
+certs/
+mensajeria/enviados/

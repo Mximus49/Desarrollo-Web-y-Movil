@@ -1,0 +1,7 @@
+Fecha: 2026-11-07 17:32 | Equipo: Windows 11, 12 nucleos logicos, 16 GB RAM
+Entorno: todos los servicios en la misma maquina con TLS, MongoDB y RabbitMQ en Docker, Vault en modo dev
+Usuarios concurrentes: 20, solicitudes por usuario: 50
+Catalogo GET /api/products: 1000 solicitudes en 10.8 s | 93 req/s | mediana 185 ms | p95 405 ms | errores 0
+  CPU backend promedio 120% / max 138% de un nucleo | memoria max 592 MB (9 procesos)
+Mis pedidos GET /api/orders/mine: 1000 solicitudes en 18.1 s | 55 req/s | mediana 328 ms | p95 647 ms | errores 0
+  CPU backend promedio 127% / max 156% de un nucleo | memoria max 606 MB (9 procesos)

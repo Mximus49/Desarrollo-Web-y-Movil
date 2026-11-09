@@ -1,0 +1,3619 @@
+{
+  "info": {
+    "name": "Queso & Sabor Backend",
+    "description": "Pruebas del backend por el API Gateway (HTTPS). Correr en orden con el Collection Runner o con newman. Requiere la variable webhook_secret y confiar en certs/ca.crt (ver README, Anexo A).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 Salud",
+      "item": [
+        {
+          "name": "Health del gateway y servicios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Todos los servicios responden\", () => {",
+                  "    const s = pm.response.json().servicios;",
+                  "    Object.keys(s).forEach(k => pm.expect(s[k], k).to.eql(\"OK\"));",
+                  "});",
+                  "pm.collectionVariables.set(\"run\", Date.now().toString());"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Catalogo publico (S01, S02)",
+      "item": [
+        {
+          "name": "S01 Catalogo anonimo sin stock",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const lista = pm.response.json();",
+                  "pm.test(\"Trae productos\", () => pm.expect(lista.length).to.be.above(0));",
+                  "pm.test(\"No expone el stock exacto\", () => lista.forEach(p => pm.expect(p).to.not.have.property(\"stock\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S01 Ofertas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/products?en_oferta=true"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Solo productos con descuento\", () => pm.response.json().forEach(p => pm.expect(p.oferta_pct).to.be.above(0)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S01 Filtro invalido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/products?categoria=zapatos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S02 Detalle de producto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/products/azul-andino"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Precio final con oferta\", () => pm.expect(pm.response.json().precio_final).to.eql(7120));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Autenticacion (S03-S06)",
+      "item": [
+        {
+          "name": "Login ana (cliente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ana@quesoysabor.cl\",\n  \"password\": \"Ana12345\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token_ana\", pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login pedro (cliente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"pedro@quesoysabor.cl\",\n  \"password\": \"Pedro12345\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token_pedro\", pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@quesoysabor.cl\",\n  \"password\": \"Admin12345\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token_admin\", pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login despacho",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"despacho@quesoysabor.cl\",\n  \"password\": \"Despacho12345\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token_despacho\", pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login dueno",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"dueno@quesoysabor.cl\",\n  \"password\": \"Dueno12345\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token_dueno\", pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login cajero",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cajero@quesoysabor.cl\",\n  \"password\": \"Cajero12345\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token_cajero\", pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S03 Login con clave incorrecta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ana@quesoysabor.cl\",\n  \"password\": \"mala\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"No dice si el correo existe\", () => pm.expect(pm.response.json().detail).to.eql(\"Credenciales incorrectas\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S04 Registro de cliente nuevo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nuevo{{run}}@correo.cl\",\n  \"nombre\": \"Cliente Nuevo\",\n  \"password\": \"Nuevo12345\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Queda como cliente\", () => pm.expect(pm.response.json().roles).to.eql([\"cliente\"]));",
+                  "pm.test(\"No devuelve la contrasena\", () => pm.expect(pm.response.text()).to.not.include(\"Nuevo12345\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S04 Registro intentando ser admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"colado{{run}}@correo.cl\",\n  \"nombre\": \"Colado\",\n  \"password\": \"Colado12345\",\n  \"roles\": [\n    \"admin\"\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"El rol enviado se ignora\", () => pm.expect(pm.response.json().roles).to.eql([\"cliente\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S04 Registro con correo repetido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ana@quesoysabor.cl\",\n  \"nombre\": \"Otra Ana\",\n  \"password\": \"Ana12345\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S04 Registro con correo inexistente (RF11)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"noexiste{{run}}@correo.cl\",\n  \"nombre\": \"Fantasma\",\n  \"password\": \"Fantasma123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Indica que el correo no existe\", () => pm.expect(pm.response.json().detail).to.include(\"no existe\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S04 Registro con dominio inexistente (RF11)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cliente{{run}}@example.com\",\n  \"nombre\": \"Sin Dominio\",\n  \"password\": \"Dominio123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S05 Quien soy",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Sesion de ana\", () => pm.expect(pm.response.json().email).to.eql(\"ana@quesoysabor.cl\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 Seguridad del gateway y acceso directo",
+      "item": [
+        {
+          "name": "Ruta protegida sin token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/orders/mine"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token inventado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer token-falso"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/mine"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cliente intenta crear producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/products",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"colado\",\n  \"nombre\": \"x\",\n  \"categoria\": \"fresco\",\n  \"precio\": 1,\n  \"stock\": 1\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cliente manda cabeceras de rol falsas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              },
+              {
+                "key": "X-Authenticated-Roles",
+                "value": "admin"
+              },
+              {
+                "key": "X-Service-Key",
+                "value": "inventada"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/products",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"colado\",\n  \"nombre\": \"x\",\n  \"categoria\": \"fresco\",\n  \"precio\": 1,\n  \"stock\": 1\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Acceso directo a inventory sin clave",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Authenticated-Roles",
+                "value": "admin"
+              }
+            ],
+            "url": "{{inventory_url}}/admin/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Acceso directo a orders sin clave",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{orders_url}}/internal/ventas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ruta interna no publicada en el gateway",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/internal/reservar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"azul-andino\",\n      \"cantidad\": 1\n    }\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verbo no permitido",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 405\", () => pm.response.to.have.status(405));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Acceso directo a la mensajeria sin API key",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{mensajeria_url}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 Clientes (S07-S09)",
+      "item": [
+        {
+          "name": "S07 Ver mi perfil",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/clients/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Perfil completo\", () => pm.expect(pm.response.json().perfil_completo).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S08 Actualizar mi perfil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/clients/me",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ana Rojas\",\n  \"rut\": \"11111111-1\",\n  \"telefono\": \"+56911112222\",\n  \"direccion\": \"Av. Providencia 1234, depto 5\",\n  \"comuna\": \"Providencia\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S08 Perfil con todos los datos del RF5",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/clients/me",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ana Rojas\",\n  \"rut\": \"11111111-1\",\n  \"telefono\": \"+56911112222\",\n  \"direccion\": \"Av. Providencia 1234, depto 5\",\n  \"comuna\": \"Providencia\",\n  \"provincia\": \"Santiago\",\n  \"region\": \"Metropolitana de Santiago\",\n  \"fecha_nacimiento\": \"1995-04-12\",\n  \"sexo\": \"F\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const p = pm.response.json();",
+                  "pm.test(\"Guarda provincia, region, fecha de nacimiento y sexo\", () => {",
+                  "  pm.expect(p.provincia).to.eql(\"Santiago\"); pm.expect(p.region).to.eql(\"Metropolitana de Santiago\");",
+                  "  pm.expect(p.fecha_nacimiento).to.eql(\"1995-04-12\"); pm.expect(p.sexo).to.eql(\"F\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S08 Fecha de nacimiento futura",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/clients/me",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ana Rojas\",\n  \"rut\": \"11111111-1\",\n  \"telefono\": \"+56911112222\",\n  \"direccion\": \"Av. Providencia 1234, depto 5\",\n  \"comuna\": \"Providencia\",\n  \"provincia\": \"Santiago\",\n  \"region\": \"Metropolitana de Santiago\",\n  \"fecha_nacimiento\": \"2999-01-01\",\n  \"sexo\": \"F\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S08 Sexo fuera de las opciones",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/clients/me",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ana Rojas\",\n  \"rut\": \"11111111-1\",\n  \"telefono\": \"+56911112222\",\n  \"direccion\": \"Av. Providencia 1234, depto 5\",\n  \"comuna\": \"Providencia\",\n  \"provincia\": \"Santiago\",\n  \"region\": \"Metropolitana de Santiago\",\n  \"fecha_nacimiento\": \"1995-04-12\",\n  \"sexo\": \"X\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S08 RUT con digito verificador malo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/clients/me",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ana Rojas\",\n  \"rut\": \"11111111-2\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S08 RUT de otro cliente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_pedro}}"
+              }
+            ],
+            "url": "{{base_url}}/api/clients/me",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Pedro Soto\",\n  \"rut\": \"11111111-1\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S09 Admin lista clientes con RUT enmascarado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/clients"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const ana = pm.response.json().find(c => c.email === \"ana@quesoysabor.cl\");",
+                  "pm.test(\"RUT enmascarado\", () => pm.expect(ana.rut.startsWith(\"*\")).to.be.true);",
+                  "pm.test(\"No trae telefono ni direccion\", () => { pm.expect(ana).to.not.have.property(\"telefono\"); pm.expect(ana).to.not.have.property(\"direccion\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S09 Cliente no puede listar clientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/clients"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S28 Admin registra un cliente en el local (RF6)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/clients",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"local{{run}}@correo.cl\",\n  \"password\": \"Local12345\",\n  \"nombre\": \"Cliente del Local\",\n  \"telefono\": \"+56933334444\",\n  \"direccion\": \"Irarrazaval 2000\",\n  \"comuna\": \"Nunoa\",\n  \"provincia\": \"Santiago\",\n  \"region\": \"Metropolitana de Santiago\",\n  \"fecha_nacimiento\": \"1988-09-30\",\n  \"sexo\": \"M\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "const p = pm.response.json();",
+                  "pm.test(\"Crea el perfil con los datos del RF5\", () => { pm.expect(p.comuna).to.eql(\"Nunoa\"); pm.expect(p.sexo).to.eql(\"M\"); });",
+                  "pm.test(\"No devuelve la contrasena\", () => pm.expect(pm.response.text()).to.not.include(\"Local12345\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login del cliente registrado en el local",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"local{{run}}@correo.cl\",\n  \"password\": \"Local12345\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token_local\", pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S07 El cliente del local ve su perfil",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_local}}"
+              }
+            ],
+            "url": "{{base_url}}/api/clients/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Perfil completo\", () => pm.expect(pm.response.json().perfil_completo).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S28 Correo inexistente no se registra",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/clients",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"noexiste{{run}}@correo.cl\",\n  \"password\": \"Local12345\",\n  \"nombre\": \"Cliente del Local\",\n  \"telefono\": \"+56933334444\",\n  \"direccion\": \"Irarrazaval 2000\",\n  \"comuna\": \"Nunoa\",\n  \"provincia\": \"Santiago\",\n  \"region\": \"Metropolitana de Santiago\",\n  \"fecha_nacimiento\": \"1988-09-30\",\n  \"sexo\": \"M\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S28 RUT de otro cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/clients",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"otro{{run}}@correo.cl\",\n  \"password\": \"Local12345\",\n  \"nombre\": \"Cliente del Local\",\n  \"telefono\": \"+56933334444\",\n  \"direccion\": \"Irarrazaval 2000\",\n  \"comuna\": \"Nunoa\",\n  \"provincia\": \"Santiago\",\n  \"region\": \"Metropolitana de Santiago\",\n  \"fecha_nacimiento\": \"1988-09-30\",\n  \"sexo\": \"M\",\n  \"rut\": \"11111111-1\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S28 Despacho no registra clientes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_despacho}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/clients",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"otro{{run}}@correo.cl\",\n  \"password\": \"Local12345\",\n  \"nombre\": \"Cliente del Local\",\n  \"telefono\": \"+56933334444\",\n  \"direccion\": \"Irarrazaval 2000\",\n  \"comuna\": \"Nunoa\",\n  \"provincia\": \"Santiago\",\n  \"region\": \"Metropolitana de Santiago\",\n  \"fecha_nacimiento\": \"1988-09-30\",\n  \"sexo\": \"M\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 Pedidos (S10-S13)",
+      "item": [
+        {
+          "name": "Stock de chanco antes del pedido (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const p = pm.response.json().find(x => x.id === \"chanco-ahumado\");",
+                  "pm.collectionVariables.set(\"stock_chanco\", p.stock);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S10 Crear pedido con precio y estado alterados",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"chanco-ahumado\",\n      \"cantidad\": 2,\n      \"precio_unitario\": 1\n    }\n  ],\n  \"modalidad\": \"DESPACHO\",\n  \"total\": 1,\n  \"estado\": \"PAGADO\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "",
+                  "const p = pm.response.json();",
+                  "pm.test(\"Estado lo pone el servidor\", () => pm.expect(p.estado).to.eql(\"PENDIENTE_PAGO\"));",
+                  "pm.test(\"Total calculado con el precio oficial\", () => pm.expect(p.total).to.eql(2 * 4390));",
+                  "pm.test(\"Direccion copiada del perfil\", () => pm.expect(p.direccion_entrega).to.include(\"Providencia\"));",
+                  "pm.collectionVariables.set(\"order_id\", p.id);",
+                  "pm.collectionVariables.set(\"order_total\", p.total);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Stock de chanco bajo en 2",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const p = pm.response.json().find(x => x.id === \"chanco-ahumado\");",
+                  "pm.test(\"Stock reservado\", () => pm.expect(p.stock).to.eql(Number(pm.collectionVariables.get(\"stock_chanco\")) - 2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S10 Pedido sin stock suficiente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"azul-andino\",\n      \"cantidad\": 20\n    }\n  ],\n  \"modalidad\": \"RETIRO\",\n  \"local_retiro\": \"Local Nunoa\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S10 Producto agotado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"especiado-hierbas\",\n      \"cantidad\": 1\n    }\n  ],\n  \"modalidad\": \"RETIRO\",\n  \"local_retiro\": \"Local Nunoa\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S10 Productos repetidos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"azul-andino\",\n      \"cantidad\": 1\n    },\n    {\n      \"product_id\": \"azul-andino\",\n      \"cantidad\": 1\n    }\n  ],\n  \"modalidad\": \"RETIRO\",\n  \"local_retiro\": \"Local Nunoa\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S10 Despacho sin direccion en el perfil",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_pedro}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"azul-andino\",\n      \"cantidad\": 1\n    }\n  ],\n  \"modalidad\": \"DESPACHO\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S10 Local de retiro inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"azul-andino\",\n      \"cantidad\": 1\n    }\n  ],\n  \"modalidad\": \"RETIRO\",\n  \"local_retiro\": \"Bodega secreta\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S12 Ana ve su pedido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/{{order_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Al cliente no se le devuelven datos internos\", () => pm.expect(pm.response.json()).to.not.have.property(\"user_id\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S12 Pedro no puede ver el pedido de ana",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_pedro}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/{{order_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"No devuelve datos del pedido\", () => pm.expect(pm.response.json()).to.not.have.property(\"items\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S12 Despacho ve el pedido con datos de entrega",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_despacho}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/{{order_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Incluye cliente para despachar\", () => pm.expect(pm.response.json().cliente.nombre).to.eql(\"Ana Rojas\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S11 Mis pedidos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/mine"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Incluye el pedido creado\", () => pm.expect(pm.response.json().map(p => p.id)).to.include(pm.collectionVariables.get(\"order_id\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S11 Pedro no ve pedidos de ana en su historial",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_pedro}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/mine"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Historial sin pedidos ajenos\", () => pm.expect(pm.response.json().map(p => p.id)).to.not.include(pm.collectionVariables.get(\"order_id\")));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 Pagos (S16-S18)",
+      "item": [
+        {
+          "name": "S16 Iniciar pago con monto y estado alterados",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/payments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": \"{{order_id}}\",\n  \"monto\": 1,\n  \"estado\": \"APROBADO\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "",
+                  "const p = pm.response.json();",
+                  "pm.test(\"Queda pendiente\", () => pm.expect(p.estado).to.eql(\"PENDIENTE\"));",
+                  "pm.test(\"Monto sale del pedido\", () => pm.expect(p.monto).to.eql(Number(pm.collectionVariables.get(\"order_total\"))));",
+                  "pm.collectionVariables.set(\"payment_id\", p.payment_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S16 Iniciar el mismo pago reutiliza el pendiente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/payments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": \"{{order_id}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "",
+                  "pm.test(\"Mismo payment_id\", () => pm.expect(pm.response.json().payment_id).to.eql(pm.collectionVariables.get(\"payment_id\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S16 Pedro no puede pagar el pedido de ana",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_pedro}}"
+              }
+            ],
+            "url": "{{base_url}}/api/payments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": \"{{order_id}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S12 El pedido sigue pendiente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/{{order_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"No se marco pagado desde el navegador\", () => pm.expect(pm.response.json().estado).to.eql(\"PENDIENTE_PAGO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S18 Aviso de pasarela con firma falsa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Firma",
+                "value": "firma-inventada"
+              }
+            ],
+            "url": "{{base_url}}/api/payments/webhook",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"evento_id\": \"evt-falso-123\", \"payment_id\": \"{{payment_id}}\", \"estado\": \"APROBADO\", \"monto\": {{order_total}}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S18 Aviso firmado pero con monto alterado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/payments/webhook",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Firma el aviso igual que lo haria la pasarela: HMAC-SHA256 del cuerpo con webhook_secret",
+                  "const cuerpo = JSON.stringify({evento_id: \"evt-monto-\" + pm.collectionVariables.get(\"run\"), payment_id: pm.collectionVariables.get(\"payment_id\"), estado: \"APROBADO\", monto: 1});",
+                  "pm.request.body.raw = cuerpo;",
+                  "const firma = CryptoJS.HmacSHA256(cuerpo, pm.variables.get(\"webhook_secret\")).toString(CryptoJS.enc.Hex);",
+                  "pm.request.headers.upsert({key: \"X-Firma\", value: firma});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S18 Aviso valido de la pasarela",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/payments/webhook",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Procesado\", () => pm.expect(pm.response.json().duplicado).to.be.false);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Firma el aviso igual que lo haria la pasarela: HMAC-SHA256 del cuerpo con webhook_secret",
+                  "const cuerpo = JSON.stringify({evento_id: \"evt-ok-\" + pm.collectionVariables.get(\"run\"), payment_id: pm.collectionVariables.get(\"payment_id\"), estado: \"APROBADO\", monto: Number(pm.collectionVariables.get(\"order_total\"))});",
+                  "pm.request.body.raw = cuerpo;",
+                  "const firma = CryptoJS.HmacSHA256(cuerpo, pm.variables.get(\"webhook_secret\")).toString(CryptoJS.enc.Hex);",
+                  "pm.request.headers.upsert({key: \"X-Firma\", value: firma});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S18 Mismo aviso repetido no se procesa dos veces",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/payments/webhook",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Marcado como duplicado\", () => pm.expect(pm.response.json().duplicado).to.be.true);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Firma el aviso igual que lo haria la pasarela: HMAC-SHA256 del cuerpo con webhook_secret",
+                  "const cuerpo = JSON.stringify({evento_id: \"evt-ok-\" + pm.collectionVariables.get(\"run\"), payment_id: pm.collectionVariables.get(\"payment_id\"), estado: \"APROBADO\", monto: Number(pm.collectionVariables.get(\"order_total\"))});",
+                  "pm.request.body.raw = cuerpo;",
+                  "const firma = CryptoJS.HmacSHA256(cuerpo, pm.variables.get(\"webhook_secret\")).toString(CryptoJS.enc.Hex);",
+                  "pm.request.headers.upsert({key: \"X-Firma\", value: firma});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S12 Pedido pagado con boleta",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/{{order_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const p = pm.response.json();",
+                  "pm.test(\"Pagado\", () => pm.expect(p.estado).to.eql(\"PAGADO\"));",
+                  "pm.test(\"Boleta con IVA\", () => { pm.expect(p.boleta.folio).to.be.above(0); pm.expect(p.boleta.neto + p.boleta.iva).to.eql(p.total); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S12 Boleta emitida por la caja web",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/{{order_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json().boleta;",
+                  "pm.test(\"Caja WEB-01 y cajero virtual\", () => { pm.expect(b.caja).to.eql(\"WEB-01\"); pm.expect(b.emitida_por).to.eql(\"cajero virtual\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S30 Cajero consulta la caja del dia",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cajero}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/caja"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const caja = pm.response.json();",
+                  "pm.test(\"Incluye la venta pagada\", () => pm.expect(caja.ventas.map(v => v.order_id)).to.include(pm.collectionVariables.get(\"order_id\")));",
+                  "pm.test(\"Total recaudado positivo\", () => pm.expect(caja.total_recaudado).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S30 Cliente no ve la caja",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/caja"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S30 Fecha invalida",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cajero}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/caja?fecha=2026-13-01"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S31 Cajero reenvia la boleta al correo del cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cajero}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/orders/{{order_id}}/boleta"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Reenviada\", () => pm.expect(pm.response.json().reenviada).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S31 Despacho no reenvia boletas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_despacho}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/orders/{{order_id}}/boleta"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S17 Consultar pago",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/payments/{{payment_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Aprobado\", () => pm.expect(pm.response.json().estado).to.eql(\"APROBADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S17 Pedro no ve el pago de ana",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_pedro}}"
+              }
+            ],
+            "url": "{{base_url}}/api/payments/{{payment_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 Despacho (S14, S15)",
+      "item": [
+        {
+          "name": "S14 Cola de despacho",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_despacho}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/orders?estado=PAGADO"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Incluye el pedido pagado\", () => pm.expect(pm.response.json().map(p => p.id)).to.include(pm.collectionVariables.get(\"order_id\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S14 Dueno no opera despacho",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_dueno}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/orders"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S15 Saltarse estados no se permite",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_despacho}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/orders/{{order_id}}/estado",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"ENTREGADO\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S15 Cliente no cambia estados",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/orders/{{order_id}}/estado",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_PREPARACION\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S29 Imprimir ordenes de despacho (RF13)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_despacho}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/orders/imprimir"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Es una pagina HTML imprimible\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/html\"));",
+                  "pm.test(\"Incluye el pedido pagado\", () => pm.expect(pm.response.text()).to.include(pm.collectionVariables.get(\"order_id\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S29 Cliente no imprime ordenes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/orders/imprimir"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S15 Pasar a EN_PREPARACION",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_despacho}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/orders/{{order_id}}/estado",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_PREPARACION\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"En preparacion\", () => pm.expect(pm.response.json().estado).to.eql(\"EN_PREPARACION\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S13 No se anula un pedido en preparacion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/{{order_id}}/cancel",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Ya no lo quiero\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 Anulacion y recuperacion de stock (S13)",
+      "item": [
+        {
+          "name": "Pedido para retiro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"quesillo-fresco\",\n      \"cantidad\": 3\n    }\n  ],\n  \"modalidad\": \"RETIRO\",\n  \"local_retiro\": \"Local Nunoa\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"order2_id\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Stock de quesillo antes de anular",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const p = pm.response.json().find(x => x.id === \"quesillo-fresco\");",
+                  "pm.collectionVariables.set(\"stock_quesillo\", p.stock);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S13 Pedro no anula un pedido ajeno",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_pedro}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/{{order2_id}}/cancel",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Quiero molestar\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S13 Ana anula con motivo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/{{order2_id}}/cancel",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Me equivoque de producto\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Anulado y con motivo\", () => { pm.expect(pm.response.json().estado).to.eql(\"ANULADO\"); pm.expect(pm.response.json().motivo_anulacion).to.include(\"equivoque\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S31 Pedido sin boleta no se reenvia",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cajero}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/orders/{{order2_id}}/boleta"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Stock de quesillo recuperado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const p = pm.response.json().find(x => x.id === \"quesillo-fresco\");",
+                  "pm.test(\"Volvieron las 3 unidades\", () => pm.expect(p.stock).to.eql(Number(pm.collectionVariables.get(\"stock_quesillo\")) + 3));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S13 Anular dos veces no se permite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/{{order2_id}}/cancel",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Otra vez por si acaso\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S12 El pedido anulado sigue en el historial",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/orders/{{order2_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Se conserva\", () => pm.expect(pm.response.json().estado).to.eql(\"ANULADO\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10 GraphQL Gateway (S20)",
+      "item": [
+        {
+          "name": "S20 resumenPedido junta orders e inventory",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/graphql",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($id: ID!) { resumenPedido(id: $id) { id estado total boleta { folio iva } lineas { nombre cantidad subtotal producto { nombre categoria precioFinal } } } }\",\n  \"variables\": {\"id\": \"{{order_id}}\"}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const r = pm.response.json();",
+                  "pm.test(\"Sin errores\", () => pm.expect(r.errors).to.be.undefined);",
+                  "pm.test(\"Datos de orders\", () => pm.expect(r.data.resumenPedido.estado).to.eql(\"EN_PREPARACION\"));",
+                  "pm.test(\"Datos de inventory\", () => pm.expect(r.data.resumenPedido.lineas[0].producto.categoria).to.eql(\"madurado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S20 misPedidos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/graphql",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{ misPedidos(limite: 5) { id estado lineas { nombre producto { nombre } } } }\",\n  \"variables\": {}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Trae los pedidos de ana\", () => pm.expect(pm.response.json().data.misPedidos.length).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S20 Cliente pide el campo stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/graphql",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($id: ID!) { resumenPedido(id: $id) { lineas { producto { nombre stock } } } }\",\n  \"variables\": {\"id\": \"{{order_id}}\"}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const r = pm.response.json();",
+                  "pm.test(\"Error de autorizacion por campo\", () => pm.expect(r.errors[0].message).to.include(\"stock\"));",
+                  "pm.test(\"El stock no sale\", () => pm.expect(JSON.stringify(r.data)).to.not.match(/\"stock\":\\d/));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S20 Pedro consulta el pedido de ana",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_pedro}}"
+              }
+            ],
+            "url": "{{base_url}}/api/graphql",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($id: ID!) { resumenPedido(id: $id) { id estado total boleta { folio iva } lineas { nombre cantidad subtotal producto { nombre categoria precioFinal } } } }\",\n  \"variables\": {\"id\": \"{{order_id}}\"}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const r = pm.response.json();",
+                  "pm.test(\"Denegado\", () => pm.expect(r.errors[0].message).to.eql(\"Pedido no encontrado\"));",
+                  "pm.test(\"Sin datos\", () => pm.expect(r.data.resumenPedido).to.be.null);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S20 Consulta demasiado profunda",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/graphql",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{ misPedidos { lineas { producto { nombre a { b { c { d } } } } } } }\",\n  \"variables\": {}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Rechazada por profundidad\", () => pm.expect(JSON.stringify(pm.response.json().errors)).to.include(\"demasiado profunda\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S20 Demasiados campos con alias",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/graphql",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{ misPedidos { a0: id a1: id a2: id a3: id a4: id a5: id a6: id a7: id a8: id a9: id a10: id a11: id a12: id a13: id a14: id a15: id a16: id a17: id a18: id a19: id a20: id a21: id a22: id a23: id a24: id a25: id a26: id a27: id a28: id a29: id a30: id a31: id a32: id a33: id a34: id a35: id a36: id a37: id a38: id a39: id a40: id a41: id a42: id a43: id a44: id a45: id a46: id a47: id a48: id a49: id a50: id a51: id a52: id a53: id a54: id a55: id a56: id a57: id a58: id a59: id a60: id a61: id a62: id a63: id a64: id a65: id a66: id a67: id a68: id a69: id } }\",\n  \"variables\": {}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Rechazada por cantidad de campos\", () => pm.expect(JSON.stringify(pm.response.json().errors)).to.include(\"demasiados campos\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S20 Introspeccion deshabilitada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/graphql",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{ __schema { types { name } } }\",\n  \"variables\": {}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"No expone el schema\", () => pm.expect(pm.response.json().errors).to.not.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S20 panelAdmin para el dueno",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_dueno}}"
+              }
+            ],
+            "url": "{{base_url}}/api/graphql",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{ panelAdmin { ventas { pedidosPagados totalVendido productosMasVendidos { nombre unidades } } productosBajoStock(limite: 5) { nombre stock } } }\",\n  \"variables\": {}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const r = pm.response.json();",
+                  "pm.test(\"Sin errores\", () => pm.expect(r.errors).to.be.undefined);",
+                  "pm.test(\"Ventas desde analytics\", () => pm.expect(r.data.panelAdmin.ventas.totalVendido).to.be.above(0));",
+                  "pm.test(\"Bajo stock desde inventory\", () => pm.expect(r.data.panelAdmin.productosBajoStock.map(p => p.nombre)).to.include(\"Azul Andino\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S20 panelAdmin para un cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/graphql",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{ panelAdmin { ventas { totalVendido } } }\",\n  \"variables\": {}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Denegado\", () => pm.expect(pm.response.json().errors[0].message).to.eql(\"No autorizado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S20 GraphQL sin token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/graphql",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{ misPedidos { id } }\",\n  \"variables\": {}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Acceso directo al GraphQL privado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Authenticated-Roles",
+                "value": "admin"
+              }
+            ],
+            "url": "{{graphql_url}}/graphql",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{ misPedidos { id } }\",\n  \"variables\": {}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "11 Analitica (S19)",
+      "item": [
+        {
+          "name": "S19 Dueno ve el reporte de ventas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_dueno}}"
+              }
+            ],
+            "url": "{{base_url}}/api/analytics/ventas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const r = pm.response.json();",
+                  "pm.test(\"Cuenta el pedido pagado\", () => pm.expect(r.pedidos_pagados).to.be.above(0));",
+                  "pm.test(\"Sin datos personales\", () => pm.expect(pm.response.text()).to.not.include(\"ana@\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S19 Cliente no ve reportes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/analytics/ventas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12 Administracion de productos (S21-S24)",
+      "item": [
+        {
+          "name": "S22 Admin crea producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/products",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"queso-prueba-{{run}}\",\n  \"nombre\": \"Queso de Prueba\",\n  \"categoria\": \"fresco\",\n  \"descripcion\": \"Solo para pruebas\",\n  \"precio\": 3000,\n  \"stock\": 10\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S22 Dueno no crea productos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_dueno}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/products",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"queso-prueba-{{run}}\",\n  \"nombre\": \"Queso de Prueba\",\n  \"categoria\": \"fresco\",\n  \"descripcion\": \"Solo para pruebas\",\n  \"precio\": 3000,\n  \"stock\": 10\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S22 Id repetido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/products",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"queso-prueba-{{run}}\",\n  \"nombre\": \"Queso de Prueba\",\n  \"categoria\": \"fresco\",\n  \"descripcion\": \"Solo para pruebas\",\n  \"precio\": 3000,\n  \"stock\": 10\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S23 Admin modifica precio y oferta",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/products/queso-prueba-{{run}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Queso de Prueba\",\n  \"categoria\": \"fresco\",\n  \"descripcion\": \"Solo para pruebas\",\n  \"precio\": 4000,\n  \"stock\": 10,\n  \"oferta_pct\": 10\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Precio final recalculado\", () => pm.expect(pm.response.json().precio_final).to.eql(3600));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S24 Admin da de baja el producto",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/products/queso-prueba-{{run}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Baja logica\", () => pm.expect(pm.response.json().activo).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S02 Producto dado de baja ya no es publico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/products/queso-prueba-{{run}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S21 Admin aun lo ve en su listado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"Sigue guardado\", () => pm.expect(pm.response.json().map(p => p.id)).to.include(\"queso-prueba-\" + pm.collectionVariables.get(\"run\")));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "13 Usuarios del personal (S25-S27)",
+      "item": [
+        {
+          "name": "S25 Admin lista usuarios sin hash de contrasena",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/users"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test(\"No expone hashes\", () => pm.expect(pm.response.text()).to.not.include(\"pbkdf2\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S25 Despacho no administra usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_despacho}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/users"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S26 Admin crea encargado de despacho",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"despacho{{run}}@quesoysabor.cl\",\n  \"nombre\": \"Despacho Turno Tarde\",\n  \"password\": \"Turno12345\",\n  \"roles\": [\n    \"despacho\"\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"staff_id\", pm.response.json().user_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S26 Admin crea un cajero virtual",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cajero{{run}}@quesoysabor.cl\",\n  \"nombre\": \"Cajero Tarde\",\n  \"password\": \"Cajero12345\",\n  \"roles\": [\n    \"cajero\"\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Rol cajero\", () => pm.expect(pm.response.json().roles).to.eql([\"cajero\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S26 No se crean clientes ni roles inventados aqui",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"raro{{run}}@quesoysabor.cl\",\n  \"nombre\": \"Raro\",\n  \"password\": \"Raro12345\",\n  \"roles\": [\n    \"superusuario\"\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login del nuevo encargado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"despacho{{run}}@quesoysabor.cl\",\n  \"password\": \"Turno12345\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token_staff\", pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S27 Admin desactiva al encargado",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": "{{base_url}}/api/admin/users/{{staff_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Desactivado\", () => pm.expect(pm.response.json().activo).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S27 La sesion del desactivado se cerro",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_staff}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S19 Reporte por periodo invalido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_dueno}}"
+              }
+            ],
+            "url": "{{base_url}}/api/analytics/ventas?desde=2026-12-31&hasta=2026-01-01"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S19 Reporte de un periodo sin ventas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_dueno}}"
+              }
+            ],
+            "url": "{{base_url}}/api/analytics/ventas?desde=2020-01-01&hasta=2020-01-31"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Sin ventas\", () => pm.expect(pm.response.json().pedidos_pagados).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "14 Cierre de sesion y fuerza bruta",
+      "item": [
+        {
+          "name": "S06 Logout de ana",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/logout"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S06 El token revocado ya no sirve",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_ana}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Limite de intentos de login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"victima{{run}}@correo.cl\",\n  \"password\": \"intento\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 429\", () => pm.response.to.have.status(429));"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Antes de esta solicitud se mandan 5 intentos fallidos con el mismo correo",
+                  "for (let i = 0; i < 5; i++) {",
+                  "    pm.sendRequest({url: pm.variables.get(\"base_url\") + \"/api/auth/login\", method: \"POST\",",
+                  "        header: {\"Content-Type\": \"application/json\"},",
+                  "        body: {mode: \"raw\", raw: JSON.stringify({email: \"victima\" + pm.collectionVariables.get(\"run\") + \"@correo.cl\", password: \"intento\"})}});",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://localhost:8000"
+    },
+    {
+      "key": "inventory_url",
+      "value": "https://127.0.0.1:9001"
+    },
+    {
+      "key": "orders_url",
+      "value": "https://127.0.0.1:9002"
+    },
+    {
+      "key": "graphql_url",
+      "value": "https://127.0.0.1:8090"
+    },
+    {
+      "key": "webhook_secret",
+      "value": ""
+    },
+    {
+      "key": "mensajeria_url",
+      "value": "https://127.0.0.1:8300"
+    }
+  ]
+}

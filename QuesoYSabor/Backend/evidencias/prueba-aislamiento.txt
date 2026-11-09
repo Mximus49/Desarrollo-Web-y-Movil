@@ -1,0 +1,41 @@
+Prueba de aislamiento de credenciales y red (2026-11-07 17:31)
+
+1. Politicas de Vault (un token por servicio)
+  [OK] token de payments lee quesoysabor/pasarela
+  [OK] token de orders NO lee quesoysabor/pasarela
+  [OK] token de analytics NO lee quesoysabor/payments
+  [OK] token de inventory NO lee quesoysabor/db/orders
+  [OK] token de gateway NO lee quesoysabor/db/auth
+  [OK] token de gateway NO lee quesoysabor/pasarela
+  [OK] token de graphql NO lee quesoysabor/db/inventory
+  [OK] token de notifications lee quesoysabor/mensajeria
+  [OK] token de clients lee quesoysabor/db/clients
+  [OK] token de auth NO lee quesoysabor/mongo-admin
+
+2. Usuarios de MongoDB (uno por servicio)
+  [OK] MongoDB rechaza consultas sin credenciales
+  [OK] qys_inventory accede a su base (1 colecciones)
+  [OK] qys_inventory NO accede a quesoysabor_auth
+  [OK] qys_orders accede a su base (3 colecciones)
+  [OK] qys_orders NO accede a quesoysabor_clients
+  [OK] qys_payments accede a su base (2 colecciones)
+  [OK] qys_payments NO accede a quesoysabor_orders
+  [OK] El validador $jsonSchema rechaza un producto incompleto
+
+3. TLS y exposicion de red
+  [OK] El gateway no responde por HTTP sin TLS
+  [OK] El gateway responde por HTTPS con el certificado de la CA local
+  [OK] puerto 8000 escucha en 0.0.0.0
+  [OK] puerto 8100 escucha en 127.0.0.1
+  [OK] puerto 9001 escucha en 127.0.0.1
+  [OK] puerto 9002 escucha en 127.0.0.1
+  [OK] puerto 9003 escucha en 127.0.0.1
+  [OK] puerto 9004 escucha en 127.0.0.1
+  [OK] puerto 9005 escucha en 127.0.0.1
+  [OK] puerto 8090 escucha en 127.0.0.1
+  [OK] puerto 8300 escucha en 127.0.0.1
+  [OK] puerto 8200 escucha en 127.0.0.1
+  [OK] puerto 27018 escucha en 127.0.0.1
+  [OK] puerto 61613 escucha en 127.0.0.1
+
+Resultado: 32 de 32 comprobaciones OK

@@ -1,0 +1,605 @@
+﻿newman
+
+Queso & Sabor Backend
+
+Folder 01 Salud
+Sub-folder Health del gateway y servicios
+  GET https://localhost:8000/health [200 OK, 290B, 121ms]
+  Pass  Responde 200
+  Pass  Todos los servicios responden
+
+Folder 02 Catalogo publico (S01, S02)
+Sub-folder S01 Catalogo anonimo sin stock
+  GET https://localhost:8000/api/products [200 OK, 1.78kB, 29ms]
+  Pass  Responde 200
+  Pass  Trae productos
+  Pass  No expone el stock exacto
+
+Sub-folder S01 Ofertas
+  GET https://localhost:8000/api/products?en_oferta=true [200 OK, 953B, 14ms]
+  Pass  Responde 200
+  Pass  Solo productos con descuento
+
+Sub-folder S01 Filtro invalido
+  GET https://localhost:8000/api/products?categoria=zapatos [422 Unprocessable Entity, 381B, 12ms]
+  Pass  Responde 422
+
+Sub-folder S02 Detalle de producto
+  GET https://localhost:8000/api/products/azul-andino [200 OK, 343B, 11ms]
+  Pass  Responde 200
+  Pass  Precio final con oferta
+
+Folder 03 Autenticacion (S03-S06)
+Sub-folder Login ana (cliente)
+  POST https://localhost:8000/api/auth/login [200 OK, 256B, 52ms]
+  Pass  Responde 200
+
+Sub-folder Login pedro (cliente)
+  POST https://localhost:8000/api/auth/login [200 OK, 256B, 48ms]
+  Pass  Responde 200
+
+Sub-folder Login admin
+  POST https://localhost:8000/api/auth/login [200 OK, 256B, 76ms]
+  Pass  Responde 200
+
+Sub-folder Login despacho
+  POST https://localhost:8000/api/auth/login [200 OK, 256B, 49ms]
+  Pass  Responde 200
+
+Sub-folder Login dueno
+  POST https://localhost:8000/api/auth/login [200 OK, 256B, 51ms]
+  Pass  Responde 200
+
+Sub-folder Login cajero
+  POST https://localhost:8000/api/auth/login [200 OK, 256B, 59ms]
+  Pass  Responde 200
+
+Sub-folder S03 Login con clave incorrecta
+  POST https://localhost:8000/api/auth/login [401 Unauthorized, 200B, 47ms]
+  Pass  Responde 401
+  Pass  No dice si el correo existe
+
+Sub-folder S04 Registro de cliente nuevo
+  POST https://localhost:8000/api/auth/register [201 Created, 255B, 95ms]
+  Pass  Responde 201
+  Pass  Queda como cliente
+  Pass  No devuelve la contrasena
+
+Sub-folder S04 Registro intentando ser admin
+  POST https://localhost:8000/api/auth/register [201 Created, 256B, 61ms]
+  Pass  Responde 201
+  Pass  El rol enviado se ignora
+
+Sub-folder S04 Registro con correo repetido
+  POST https://localhost:8000/api/auth/register [409 Conflict, 200B, 11ms]
+  Pass  Responde 409
+
+Sub-folder S04 Registro con correo inexistente (RF11)
+  POST https://localhost:8000/api/auth/register [422 Unprocessable Entity, 220B, 23ms]
+  Pass  Responde 422
+  Pass  Indica que el correo no existe
+
+Sub-folder S04 Registro con dominio inexistente (RF11)
+  POST https://localhost:8000/api/auth/register [422 Unprocessable Entity, 220B, 22ms]
+  Pass  Responde 422
+
+Sub-folder S05 Quien soy
+  GET https://localhost:8000/api/auth/me [200 OK, 310B, 12ms]
+  Pass  Responde 200
+  Pass  Sesion de ana
+
+Folder 04 Seguridad del gateway y acceso directo
+Sub-folder Ruta protegida sin token
+  GET https://localhost:8000/api/orders/mine [401 Unauthorized, 198B, 4ms]
+  Pass  Responde 401
+
+Sub-folder Token inventado
+  GET https://localhost:8000/api/orders/mine [401 Unauthorized, 201B, 10ms]
+  Pass  Responde 401
+
+Sub-folder Cliente intenta crear producto
+  POST https://localhost:8000/api/admin/products [403 Forbidden, 216B, 13ms]
+  Pass  Responde 403
+
+Sub-folder Cliente manda cabeceras de rol falsas
+  POST https://localhost:8000/api/admin/products [403 Forbidden, 216B, 13ms]
+  Pass  Responde 403
+
+Sub-folder Acceso directo a inventory sin clave
+  GET https://127.0.0.1:9001/admin/products [403 Forbidden, 166B, 7ms]
+  Pass  Responde 403
+
+Sub-folder Acceso directo a orders sin clave
+  GET https://127.0.0.1:9002/internal/ventas [403 Forbidden, 166B, 6ms]
+  Pass  Responde 403
+
+Sub-folder Ruta interna no publicada en el gateway
+  POST https://localhost:8000/api/internal/reservar [404 Not Found, 191B, 3ms]
+  Pass  Responde 404
+
+Sub-folder Verbo no permitido
+  DELETE https://localhost:8000/api/products [405 Method Not Allowed, 213B, 2ms]
+  Pass  Responde 405
+
+Sub-folder Acceso directo a la mensajeria sin API key
+  GET https://127.0.0.1:8300/health [401 Unauthorized, 164B, 6ms]
+  Pass  Responde 401
+
+Folder 05 Clientes (S07-S09)
+Sub-folder S07 Ver mi perfil
+  GET https://localhost:8000/api/clients/me [200 OK, 480B, 20ms]
+  Pass  Responde 200
+  Pass  Perfil completo
+
+Sub-folder S08 Actualizar mi perfil
+  PUT https://localhost:8000/api/clients/me [200 OK, 444B, 25ms]
+  Pass  Responde 200
+
+Sub-folder S08 Perfil con todos los datos del RF5
+  PUT https://localhost:8000/api/clients/me [200 OK, 480B, 25ms]
+  Pass  Responde 200
+  Pass  Guarda provincia, region, fecha de nacimiento y sexo
+
+Sub-folder S08 Fecha de nacimiento futura
+  PUT https://localhost:8000/api/clients/me [422 Unprocessable Entity, 212B, 19ms]
+  Pass  Responde 422
+
+Sub-folder S08 Sexo fuera de las opciones
+  PUT https://localhost:8000/api/clients/me [422 Unprocessable Entity, 354B, 18ms]
+  Pass  Responde 422
+
+Sub-folder S08 RUT con digito verificador malo
+  PUT https://localhost:8000/api/clients/me [422 Unprocessable Entity, 196B, 18ms]
+  Pass  Responde 422
+
+Sub-folder S08 RUT de otro cliente
+  PUT https://localhost:8000/api/clients/me [409 Conflict, 214B, 21ms]
+  Pass  Responde 409
+
+Sub-folder S09 Admin lista clientes con RUT enmascarado
+  GET https://localhost:8000/api/admin/clients [200 OK, 286B, 20ms]
+  Pass  Responde 200
+  Pass  RUT enmascarado
+  Pass  No trae telefono ni direccion
+
+Sub-folder S09 Cliente no puede listar clientes
+  GET https://localhost:8000/api/admin/clients [403 Forbidden, 216B, 11ms]
+  Pass  Responde 403
+
+Sub-folder S28 Admin registra un cliente en el local (RF6)
+  POST https://localhost:8000/api/admin/clients [201 Created, 476B, 85ms]
+  Pass  Responde 201
+  Pass  Crea el perfil con los datos del RF5
+  Pass  No devuelve la contrasena
+
+Sub-folder Login del cliente registrado en el local
+  POST https://localhost:8000/api/auth/login [200 OK, 256B, 46ms]
+  Pass  Responde 200
+
+Sub-folder S07 El cliente del local ve su perfil
+  GET https://localhost:8000/api/clients/me [200 OK, 471B, 20ms]
+  Pass  Responde 200
+  Pass  Perfil completo
+
+Sub-folder S28 Correo inexistente no se registra
+  POST https://localhost:8000/api/admin/clients [422 Unprocessable Entity, 220B, 42ms]
+  Pass  Responde 422
+
+Sub-folder S28 RUT de otro cliente
+  POST https://localhost:8000/api/admin/clients [409 Conflict, 214B, 21ms]
+  Pass  Responde 409
+
+Sub-folder S28 Despacho no registra clientes
+  POST https://localhost:8000/api/admin/clients [403 Forbidden, 216B, 13ms]
+  Pass  Responde 403
+
+Folder 06 Pedidos (S10-S13)
+Sub-folder Stock de chanco antes del pedido (admin)
+  GET https://localhost:8000/api/admin/products [200 OK, 1.98kB, 19ms]
+  Pass  Responde 200
+
+Sub-folder S10 Crear pedido con precio y estado alterados
+  POST https://localhost:8000/api/orders [201 Created, 541B, 49ms]
+  Pass  Responde 201
+  Pass  Estado lo pone el servidor
+  Pass  Total calculado con el precio oficial
+  Pass  Direccion copiada del perfil
+
+Sub-folder Stock de chanco bajo en 2
+  GET https://localhost:8000/api/admin/products [200 OK, 1.98kB, 20ms]
+  Pass  Responde 200
+  Pass  Stock reservado
+
+Sub-folder S10 Pedido sin stock suficiente
+  POST https://localhost:8000/api/orders [409 Conflict, 207B, 35ms]
+  Pass  Responde 409
+
+Sub-folder S10 Producto agotado
+  POST https://localhost:8000/api/orders [409 Conflict, 213B, 33ms]
+  Pass  Responde 409
+
+Sub-folder S10 Productos repetidos
+  POST https://localhost:8000/api/orders [400 Bad Request, 211B, 28ms]
+  Pass  Responde 400
+
+Sub-folder S10 Despacho sin direccion en el perfil
+  POST https://localhost:8000/api/orders [400 Bad Request, 242B, 29ms]
+  Pass  Responde 400
+
+Sub-folder S10 Local de retiro inexistente
+  POST https://localhost:8000/api/orders [400 Bad Request, 268B, 19ms]
+  Pass  Responde 400
+
+Sub-folder S12 Ana ve su pedido
+  GET https://localhost:8000/api/orders/6af108a72019b4a7731b14dc [200 OK, 530B, 19ms]
+  Pass  Responde 200
+  Pass  Al cliente no se le devuelven datos internos
+
+Sub-folder S12 Pedro no puede ver el pedido de ana
+  GET https://localhost:8000/api/orders/6af108a72019b4a7731b14dc [404 Not Found, 193B, 23ms]
+  Pass  Responde 404
+  Pass  No devuelve datos del pedido
+
+Sub-folder S12 Despacho ve el pedido con datos de entrega
+  GET https://localhost:8000/api/orders/6af108a72019b4a7731b14dc [200 OK, 626B, 20ms]
+  Pass  Responde 200
+  Pass  Incluye cliente para despachar
+
+Sub-folder S11 Mis pedidos
+  GET https://localhost:8000/api/orders/mine [200 OK, 532B, 22ms]
+  Pass  Responde 200
+  Pass  Incluye el pedido creado
+
+Sub-folder S11 Pedro no ve pedidos de ana en su historial
+  GET https://localhost:8000/api/orders/mine [200 OK, 154B, 21ms]
+  Pass  Responde 200
+  Pass  Historial sin pedidos ajenos
+
+Folder 07 Pagos (S16-S18)
+Sub-folder S16 Iniciar pago con monto y estado alterados
+  POST https://localhost:8000/api/payments [201 Created, 316B, 40ms]
+  Pass  Responde 201
+  Pass  Queda pendiente
+  Pass  Monto sale del pedido
+
+Sub-folder S16 Iniciar el mismo pago reutiliza el pendiente
+  POST https://localhost:8000/api/payments [201 Created, 310B, 32ms]
+  Pass  Responde 201
+  Pass  Mismo payment_id
+
+Sub-folder S16 Pedro no puede pagar el pedido de ana
+  POST https://localhost:8000/api/payments [404 Not Found, 193B, 30ms]
+  Pass  Responde 404
+
+Sub-folder S12 El pedido sigue pendiente
+  GET https://localhost:8000/api/orders/6af108a72019b4a7731b14dc [200 OK, 530B, 18ms]
+  Pass  Responde 200
+  Pass  No se marco pagado desde el navegador
+
+Sub-folder S18 Aviso de pasarela con firma falsa
+  POST https://localhost:8000/api/payments/webhook [401 Unauthorized, 190B, 9ms]
+  Pass  Responde 401
+
+Sub-folder S18 Aviso firmado pero con monto alterado
+  -
+  | `Using "CryptoJS" is deprecated. Use "require('crypto-
+  | js')" instead.`
+  -
+  POST https://localhost:8000/api/payments/webhook [400 Bad Request, 217B, 11ms]
+  Pass  Responde 400
+
+Sub-folder S18 Aviso valido de la pasarela
+  -
+  | `Using "CryptoJS" is deprecated. Use "require('crypto-
+  | js')" instead.`
+  -
+  POST https://localhost:8000/api/payments/webhook [200 OK, 192B, 39ms]
+  Pass  Responde 200
+  Pass  Procesado
+
+Sub-folder S18 Mismo aviso repetido no se procesa dos veces
+  -
+  | `Using "CryptoJS" is deprecated. Use "require('crypto-
+  | js')" instead.`
+  -
+  POST https://localhost:8000/api/payments/webhook [200 OK, 191B, 13ms]
+  Pass  Responde 200
+  Pass  Marcado como duplicado
+
+Sub-folder S12 Pedido pagado con boleta
+  GET https://localhost:8000/api/orders/6af108a72019b4a7731b14dc [200 OK, 655B, 21ms]
+  Pass  Responde 200
+  Pass  Pagado
+  Pass  Boleta con IVA
+
+Sub-folder S12 Boleta emitida por la caja web
+  GET https://localhost:8000/api/orders/6af108a72019b4a7731b14dc [200 OK, 655B, 19ms]
+  Pass  Responde 200
+  Pass  Caja WEB-01 y cajero virtual
+
+Sub-folder S30 Cajero consulta la caja del dia
+  GET https://localhost:8000/api/admin/caja [200 OK, 392B, 21ms]
+  Pass  Responde 200
+  Pass  Incluye la venta pagada
+  Pass  Total recaudado positivo
+
+Sub-folder S30 Cliente no ve la caja
+  GET https://localhost:8000/api/admin/caja [403 Forbidden, 216B, 13ms]
+  Pass  Responde 403
+
+Sub-folder S30 Fecha invalida
+  GET https://localhost:8000/api/admin/caja?fecha=2026-13-01 [422 Unprocessable Entity, 427B, 18ms]
+  Pass  Responde 422
+
+Sub-folder S31 Cajero reenvia la boleta al correo del cliente
+  POST https://localhost:8000/api/admin/orders/6af108a72019b4a7731b14dc/boleta [200 OK, 219B, 26ms]
+  Pass  Responde 200
+  Pass  Reenviada
+
+Sub-folder S31 Despacho no reenvia boletas
+  POST https://localhost:8000/api/admin/orders/6af108a72019b4a7731b14dc/boleta [403 Forbidden, 216B, 13ms]
+  Pass  Responde 403
+
+Sub-folder S17 Consultar pago
+  GET https://localhost:8000/api/payments/6af108a8349ab02e668632ae [200 OK, 304B, 19ms]
+  Pass  Responde 200
+  Pass  Aprobado
+
+Sub-folder S17 Pedro no ve el pago de ana
+  GET https://localhost:8000/api/payments/6af108a8349ab02e668632ae [404 Not Found, 191B, 19ms]
+  Pass  Responde 404
+
+Folder 08 Despacho (S14, S15)
+Sub-folder S14 Cola de despacho
+  GET https://localhost:8000/api/admin/orders?estado=PAGADO [200 OK, 753B, 20ms]
+  Pass  Responde 200
+  Pass  Incluye el pedido pagado
+
+Sub-folder S14 Dueno no opera despacho
+  GET https://localhost:8000/api/admin/orders [403 Forbidden, 216B, 13ms]
+  Pass  Responde 403
+
+Sub-folder S15 Saltarse estados no se permite
+  PATCH https://localhost:8000/api/admin/orders/6af108a72019b4a7731b14dc/estado [409 Conflict, 221B, 22ms]
+  Pass  Responde 409
+
+Sub-folder S15 Cliente no cambia estados
+  PATCH https://localhost:8000/api/admin/orders/6af108a72019b4a7731b14dc/estado [403 Forbidden, 216B, 13ms]
+  Pass  Responde 403
+
+Sub-folder S29 Imprimir ordenes de despacho (RF13)
+  GET https://localhost:8000/api/admin/orders/imprimir [200 OK, 926B, 21ms]
+  Pass  Responde 200
+  Pass  Es una pagina HTML imprimible
+  Pass  Incluye el pedido pagado
+
+Sub-folder S29 Cliente no imprime ordenes
+  GET https://localhost:8000/api/admin/orders/imprimir [403 Forbidden, 216B, 12ms]
+  Pass  Responde 403
+
+Sub-folder S15 Pasar a EN_PREPARACION
+  PATCH https://localhost:8000/api/admin/orders/6af108a72019b4a7731b14dc/estado [200 OK, 759B, 29ms]
+  Pass  Responde 200
+  Pass  En preparacion
+
+Sub-folder S13 No se anula un pedido en preparacion
+  POST https://localhost:8000/api/orders/6af108a72019b4a7731b14dc/cancel [409 Conflict, 225B, 23ms]
+  Pass  Responde 409
+
+Folder 09 Anulacion y recuperacion de stock (S13)
+Sub-folder Pedido para retiro
+  POST https://localhost:8000/api/orders [201 Created, 512B, 38ms]
+  Pass  Responde 201
+
+Sub-folder Stock de quesillo antes de anular
+  GET https://localhost:8000/api/admin/products [200 OK, 1.98kB, 20ms]
+  Pass  Responde 200
+
+Sub-folder S13 Pedro no anula un pedido ajeno
+  POST https://localhost:8000/api/orders/6af108ab2019b4a7731b14dd/cancel [404 Not Found, 193B, 20ms]
+  Pass  Responde 404
+
+Sub-folder S13 Ana anula con motivo
+  POST https://localhost:8000/api/orders/6af108ab2019b4a7731b14dd/cancel [200 OK, 516B, 41ms]
+  Pass  Responde 200
+  Pass  Anulado y con motivo
+
+Sub-folder S31 Pedido sin boleta no se reenvia
+  POST https://localhost:8000/api/admin/orders/6af108ab2019b4a7731b14dd/boleta [409 Conflict, 205B, 21ms]
+  Pass  Responde 409
+
+Sub-folder Stock de quesillo recuperado
+  GET https://localhost:8000/api/admin/products [200 OK, 1.98kB, 20ms]
+  Pass  Responde 200
+  Pass  Volvieron las 3 unidades
+
+Sub-folder S13 Anular dos veces no se permite
+  POST https://localhost:8000/api/orders/6af108ab2019b4a7731b14dd/cancel [409 Conflict, 218B, 20ms]
+  Pass  Responde 409
+
+Sub-folder S12 El pedido anulado sigue en el historial
+  GET https://localhost:8000/api/orders/6af108ab2019b4a7731b14dd [200 OK, 516B, 19ms]
+  Pass  Responde 200
+  Pass  Se conserva
+
+Folder 10 GraphQL Gateway (S20)
+Sub-folder S20 resumenPedido junta orders e inventory
+  POST https://localhost:8000/api/graphql [200 OK, 450B, 92ms]
+  Pass  Responde 200
+  Pass  Sin errores
+  Pass  Datos de orders
+  Pass  Datos de inventory
+
+Sub-folder S20 misPedidos
+  POST https://localhost:8000/api/graphql [200 OK, 466B, 54ms]
+  Pass  Responde 200
+  Pass  Trae los pedidos de ana
+
+Sub-folder S20 Cliente pide el campo stock
+  POST https://localhost:8000/api/graphql [200 OK, 516B, 29ms]
+  Pass  Responde 200
+  Pass  Error de autorizacion por campo
+  Pass  El stock no sale
+
+Sub-folder S20 Pedro consulta el pedido de ana
+  POST https://localhost:8000/api/graphql [200 OK, 402B, 23ms]
+  Pass  Responde 200
+  Pass  Denegado
+  Pass  Sin datos
+
+Sub-folder S20 Consulta demasiado profunda
+  POST https://localhost:8000/api/graphql [400 Bad Request, 408B, 19ms]
+  Pass  Rechazada por profundidad
+
+Sub-folder S20 Demasiados campos con alias
+  POST https://localhost:8000/api/graphql [400 Bad Request, 302B, 20ms]
+  Pass  Rechazada por cantidad de campos
+
+Sub-folder S20 Introspeccion deshabilitada
+  POST https://localhost:8000/api/graphql [400 Bad Request, 434B, 18ms]
+  Pass  No expone el schema
+
+Sub-folder S20 panelAdmin para el dueno
+  POST https://localhost:8000/api/graphql [200 OK, 416B, 39ms]
+  Pass  Responde 200
+  Pass  Sin errores
+  Pass  Ventas desde analytics
+  Pass  Bajo stock desde inventory
+
+Sub-folder S20 panelAdmin para un cliente
+  POST https://localhost:8000/api/graphql [200 OK, 381B, 18ms]
+  Pass  Denegado
+
+Sub-folder S20 GraphQL sin token
+  POST https://localhost:8000/api/graphql [401 Unauthorized, 198B, 3ms]
+  Pass  Responde 401
+
+Sub-folder Acceso directo al GraphQL privado
+  POST https://127.0.0.1:8090/graphql [403 Forbidden, 276B, 6ms]
+  Pass  Responde 403
+
+Folder 11 Analitica (S19)
+Sub-folder S19 Dueno ve el reporte de ventas
+  GET https://localhost:8000/api/analytics/ventas [200 OK, 385B, 32ms]
+  Pass  Responde 200
+  Pass  Cuenta el pedido pagado
+  Pass  Sin datos personales
+
+Sub-folder S19 Cliente no ve reportes
+  GET https://localhost:8000/api/analytics/ventas [403 Forbidden, 216B, 12ms]
+  Pass  Responde 403
+
+Folder 12 Administracion de productos (S21-S24)
+Sub-folder S22 Admin crea producto
+  POST https://localhost:8000/api/admin/products [201 Created, 368B, 22ms]
+  Pass  Responde 201
+
+Sub-folder S22 Dueno no crea productos
+  POST https://localhost:8000/api/admin/products [403 Forbidden, 216B, 12ms]
+  Pass  Responde 403
+
+Sub-folder S22 Id repetido
+  POST https://localhost:8000/api/admin/products [409 Conflict, 204B, 19ms]
+  Pass  Responde 409
+
+Sub-folder S23 Admin modifica precio y oferta
+  PUT https://localhost:8000/api/admin/products/queso-prueba-1794181282674 [200 OK, 364B, 21ms]
+  Pass  Responde 200
+  Pass  Precio final recalculado
+
+Sub-folder S24 Admin da de baja el producto
+  DELETE https://localhost:8000/api/admin/products/queso-prueba-1794181282674 [200 OK, 203B, 28ms]
+  Pass  Responde 200
+  Pass  Baja logica
+
+Sub-folder S02 Producto dado de baja ya no es publico
+  GET https://localhost:8000/api/products/queso-prueba-1794181282674 [404 Not Found, 195B, 12ms]
+  Pass  Responde 404
+
+Sub-folder S21 Admin aun lo ve en su listado
+  GET https://localhost:8000/api/admin/products [200 OK, 2.19kB, 19ms]
+  Pass  Responde 200
+  Pass  Sigue guardado
+
+Folder 13 Usuarios del personal (S25-S27)
+Sub-folder S25 Admin lista usuarios sin hash de contrasena
+  GET https://localhost:8000/api/admin/users [200 OK, 1.34kB, 20ms]
+  Pass  Responde 200
+  Pass  No expone hashes
+
+Sub-folder S25 Despacho no administra usuarios
+  GET https://localhost:8000/api/admin/users [403 Forbidden, 216B, 13ms]
+  Pass  Responde 403
+
+Sub-folder S26 Admin crea encargado de despacho
+  POST https://localhost:8000/api/admin/users [201 Created, 265B, 69ms]
+  Pass  Responde 201
+
+Sub-folder S26 Admin crea un cajero virtual
+  POST https://localhost:8000/api/admin/users [201 Created, 261B, 70ms]
+  Pass  Responde 201
+  Pass  Rol cajero
+
+Sub-folder S26 No se crean clientes ni roles inventados aqui
+  POST https://localhost:8000/api/admin/users [422 Unprocessable Entity, 232B, 18ms]
+  Pass  Responde 422
+
+Sub-folder Login del nuevo encargado
+  POST https://localhost:8000/api/auth/login [200 OK, 256B, 48ms]
+  Pass  Responde 200
+
+Sub-folder S27 Admin desactiva al encargado
+  DELETE https://localhost:8000/api/admin/users/6af108ae8b3ea437b744d967 [200 OK, 206B, 25ms]
+  Pass  Responde 200
+  Pass  Desactivado
+
+Sub-folder S27 La sesion del desactivado se cerro
+  GET https://localhost:8000/api/auth/me [401 Unauthorized, 201B, 13ms]
+  Pass  Responde 401
+
+Sub-folder S19 Reporte por periodo invalido
+  GET https://localhost:8000/api/analytics/ventas?desde=2026-12-31&hasta=2026-01-01 [400 Bad Request, 208B, 18ms]
+  Pass  Responde 400
+
+Sub-folder S19 Reporte de un periodo sin ventas
+  GET https://localhost:8000/api/analytics/ventas?desde=2020-01-01&hasta=2020-01-31 [200 OK, 261B, 32ms]
+  Pass  Responde 200
+  Pass  Sin ventas
+
+Folder 14 Cierre de sesion y fuerza bruta
+Sub-folder S06 Logout de ana
+  POST https://localhost:8000/api/auth/logout [200 OK, 184B, 21ms]
+  Pass  Responde 200
+
+Sub-folder S06 El token revocado ya no sirve
+  GET https://localhost:8000/api/auth/me [401 Unauthorized, 201B, 10ms]
+  Pass  Responde 401
+
+Sub-folder Limite de intentos de login
+  POST https://localhost:8000/api/auth/login   POST https://localhost:8000/api/auth/login   POST https://localhost:8000/api/auth/login   POST https://localhost:8000/api/auth/login   POST https://localhost:8000/api/auth/login [401 Unauthorized, 200B, 19ms]
+[401 Unauthorized, 200B, 37ms]
+[401 Unauthorized, 200B, 50ms]
+[401 Unauthorized, 200B, 55ms]
+[401 Unauthorized, 200B, 55ms]
+  POST https://localhost:8000/api/auth/login [429 Too Many Requests, 218B, 3ms]
+  Pass  Responde 429
+
+------------------------------------------------------------------
+|                         |          executed |           failed |
+--------------------------+-------------------+-------------------
+|              iterations |                 1 |                0 |
+--------------------------+-------------------+-------------------
+|                requests |               126 |                0 |
+--------------------------+-------------------+-------------------
+|            test-scripts |               121 |                0 |
+--------------------------+-------------------+-------------------
+|      prerequest-scripts |                 4 |                0 |
+--------------------------+-------------------+-------------------
+|              assertions |               188 |                0 |
+------------------------------------------------------------------
+| total run duration: 13.4s                                      |
+------------------------------------------------------------------
+| total data received: 29.64kB (approx)                          |
+------------------------------------------------------------------
+| average response time: 26ms [min: 2ms, max: 121ms, s.d.: 19ms] |
+------------------------------------------------------------------

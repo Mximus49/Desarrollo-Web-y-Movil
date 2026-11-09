@@ -1,0 +1,26 @@
+# Infraestructura en contenedores: MongoDB con autenticacion y RabbitMQ con STOMP.
+# Las claves se toman de Vault al levantarlos (scripts\iniciar_docker.ps1), no se escriben aqui.
+# Ambos puertos se publican solo en 127.0.0.1, asi no son accesibles desde otra maquina.
+services:
+  mongo:
+    image: mongo:8.0
+    container_name: quesoysabor-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_CLAVE:?Defina MONGO_ROOT_CLAVE con la clave de Vault}
+    # Datos en memoria: cada arranque parte vacio y se carga con crear_bd.py y datos_prueba.py
+    tmpfs:
+      - /data/db
+    ports:
+      - "127.0.0.1:27018:27017"
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: quesoysabor-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: queso
+      RABBITMQ_DEFAULT_PASS: ${BROKER_CLAVE:?Defina BROKER_CLAVE con la clave de Vault}
+    command: sh -c "rabbitmq-plugins enable --offline rabbitmq_stomp && rabbitmq-server"
+    ports:
+      - "127.0.0.1:61613:61613"
+      - "127.0.0.1:15672:15672"
